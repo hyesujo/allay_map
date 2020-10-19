@@ -40,7 +40,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   var uuid = Uuid();
 
   PlaceDetail placeDetail;
-  PlaceNearby placeNearby =null;
+  PlaceNearby placeNearby;
 
   var googleMapServices;
 
@@ -112,16 +112,19 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
         });
   }
 
-  void _searchPlaces(
-      String locationName, double latitude, double longitude) async {
-    final String url =
+  Future<PlaceNearby> _searchPlaces(String locationName, double latitude, double longitude) async {
+    final String nearUrl =
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
+
+    String url =
         "$nearUrl?key=$API_KEY&location=$latitude,$longitude&radius=1500&language=ko&keyword=$locationName";
 
     try {
-      final response = await http.get(url);
+      final http.Response _response = await http.get(url);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (_response.statusCode == 200) {
+        final data = json.decode(_response.body);
+        print('responseData - $data');
 
         if (data['status'] == 'OK') {
           GoogleMapController controller = await _mapController.future;
@@ -131,10 +134,11 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             ),
           );
 
-          print('place nearby - ${placeDetail} ,  ${placeNearby?.result}');
+          print('place nearby - $placeDetail ,  ${placeNearby?.result}');
           final foundPlaces = placeNearby.result;
 
           for(int i =0; i <foundPlaces.length; i++) {
+            final mark = PlaceNearby.fromJson(foundPlaces[i]);
             _markers.add(
                 Marker(
                   markerId: MarkerId(placeNearby.id),
@@ -148,6 +152,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                   ),
                 )
             );
+            return mark;
           }
 
           setState(() {
@@ -158,7 +163,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
         print('Fail to fetch place data');
       }
     } catch (e) {
-      print(e);
+      return null;
     }
   }
 
@@ -336,7 +341,8 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
           child: Container(
             margin: EdgeInsets.only(top: 20),
             height: MediaQuery.of(context).size.height,
-            child: Stack(children: [
+            child: Stack(
+                children: [
               GoogleMap(
                 myLocationEnabled: true,
                 mapType: _googleMapType,

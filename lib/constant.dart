@@ -1,5 +1,4 @@
-final String nearUrl =
-    'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
+
 
 const String API_KEY =
     "AIzaSyCAEnykKzgTP1OJJ0_Ivza7fWhtViwcFVo";

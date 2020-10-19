@@ -1,5 +1,5 @@
 class Place {
-  final String description;
+   String description;
   final String placeId;
 
   Place({
@@ -7,9 +7,11 @@ class Place {
     this.placeId,
 });
 
-  Place.fromJson(Map<String,dynamic> json)
-  :this.description = json['description'],
-  this.placeId = json['place_id'];
+  //:은 assert
+
+   Place.fromJson(Map<String,dynamic> json)
+       :this.description = json['description'],
+         this.placeId = json['place_id'];
 
   Map<String, dynamic> tomap() {
     return {
@@ -38,17 +40,19 @@ class PlaceDetail {
     this.lng,
   });
 
+ factory PlaceDetail.fromJson(Map<String, dynamic> json) => 
+     PlaceDetail(
+        formattedAddress: json['formatted_address'],
+       formattedPhoneNumber: json['formatted_phone_number'],
+       name: json['name'] ??'현재위치',
+       vicinity: json['vicinity'],
+       website: json['website'] ??'',
+       lat: json['geometry']['location']['lat'] ?? 0.0,
+       lng : json['geometry']['location']['lng'],
+      );
+       
 
-  PlaceDetail.fromJson(Map<String, dynamic> json)
-      : this.formattedAddress = json['formatted_address'],
-        this.formattedPhoneNumber = json['formatted_phone_number'],
-        this.name = json['name'] ?? "현재위치",
-        this.vicinity = json['vicinity'],
-        this.website = json['website'] ?? '',
-        this.lat = json['geometry']['location']['lat'] ?? 0.0,
-        this.lng = json['geometry']['location']['lng'];
-
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap(){
     return {
       'formateedAddress': this.formattedAddress,
       'formateedPhoneNumber': this.formattedPhoneNumber,
@@ -62,7 +66,7 @@ class PlaceDetail {
 }
 
 class PlaceNearby {
-  final String result;
+  final Map<String,dynamic> result;
   final String id;
   final double lat;
   final double lng;
@@ -78,13 +82,16 @@ class PlaceNearby {
     this.vicinity
   });
 
-  PlaceNearby.fromJson(Map<String, dynamic> json)
-   :  this.result = json['result'],
-        this.id = json['id'],
-    this.lat = json['geometry']['location']['lat'],
-    this.lng = json['geometry']['location']['lng'],
-    this.name = json['name'],
-    this.vicinity =json['vicinity'];
+
+ factory PlaceNearby.fromJson(Map<String, dynamic> json) =>
+  PlaceNearby(
+    result: json['result'],
+    id: json['id'],
+    lat: json['geometry']['location']['lat'],
+    lng: json['geometry']['location']['lng'],
+    name: json['name'],
+    vicinity: json['vicinity']
+  );
 
   Map<String, dynamic> tomap() {
     return {
