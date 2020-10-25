@@ -12,7 +12,7 @@ class GoogleMapServices {
     this.sessionToken
 });
 
-  Future<List> getSuggestions(String query) async {
+  Future<List<Place>> getSuggestions(String query) async {
     final String baseUrl =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String type = 'establishment';
@@ -41,13 +41,39 @@ class GoogleMapServices {
   //  if(getPlaceDetail(...) == 조건){
   //  }
   // }
-  Future<PlaceDetail> getPlaceDetail(String placeId, String token) async {
+  Future<PlaceDetail> getPlaceDetail(String placeId) async {
     final String baseUrl =
         'https://maps.googleapis.com/maps/api/place/details/json';
    String url =
-        '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko&sessiontoken=$token';
+        '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko';
    // --> final String _url ='$baseUrl?key=$API_KEY&place_id=$placeId&language=ko&sessiontoken=$token';
-    print('Place Detail(sessionToken): $sessionToken');
+    print("placeDetail url -$url");
+    // 예외처리
+    // -> public || private
+
+    try{
+      final http.Response _response = await http.get(url);
+      final _responseData = json.decode(_response.body);
+      print('response data - $_responseData');
+      final result = _responseData['result'];
+      print('result : $result');
+      // final PlaceDetail placeDetail = PlaceDetail.fromJson(result);
+      // print(placeDetail.toMap());
+      // return placeDetail;
+      return PlaceDetail.fromJson(result);
+    }
+    catch(e){
+      return null;
+    }
+  }
+
+  Future<PlaceDetail> getPlaceDetailList(String placeId) async {
+    final String baseUrl =
+        'https://maps.googleapis.com/maps/api/place/details/json';
+    String url =
+        '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko';
+    // --> final String _url ='$baseUrl?key=$API_KEY&place_id=$placeId&language=ko&sessiontoken=$token';
+    print("placeDetail url -$url");
     // 예외처리
     // -> public || private
 

@@ -35,27 +35,29 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   double zoomLevelMin = 0;
   GlobalKey<FormBuilderState> _fbkey = GlobalKey<FormBuilderState>();
 
-  var sessionToken;
-
   var uuid = Uuid();
 
-  PlaceDetail placeDetail;
+  dynamic sessionToken;
+
+  PlaceDetail placeDetail; //선언만 해준 상태이니 인스턴스 화를 해줘야 함
   PlaceNearby placeNearby;
 
-  var googleMapServices;
+  GoogleMapServices googleMapServices;
 
   void getCurrentPosition() async {
-    var pos = await location.getLocation();
+    LocationData pos = await location.getLocation();
     setState(() {
       currentPos = LatLng(
         pos.latitude,
         pos.longitude,
       );
     });
+
+    placeDetail = PlaceDetail(lng: pos.longitude, lat: pos.latitude); //placeDetail 인스턴스화함
     print('google map - ${currentPos.latitude}');
 
-    var mapctrl = await _mapController.future;
-    mapctrl.animateCamera(
+    GoogleMapController mapCtrl = await _mapController.future;
+    mapCtrl.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
             target: LatLng(currentPos.latitude, currentPos.longitude),
@@ -112,79 +114,97 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
         });
   }
 
-  Future<PlaceNearby> _searchPlaces(String locationName, double latitude, double longitude) async {
+  void _searchPlaces(String locationName, double latitude, double longitude)
+  async {
+    _markers.clear();
+
     final String nearUrl =
         'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
 
-    String url =
+    String _url =
         "$nearUrl?key=$API_KEY&location=$latitude,$longitude&radius=1500&language=ko&keyword=$locationName";
 
-    try {
-      final http.Response _response = await http.get(url);
+    // print("url- $url");
+    // print("search api response code - ${_response.statusCode}");
+    // print("search api response code - ${_response.body}");
+    // print('responseData - $data');
+    // print("reult -${data["results"]}");
 
+    try {
+      final http.Response _response = await http.get(_url);
       if (_response.statusCode == 200) {
         final data = json.decode(_response.body);
-        print('responseData - $data');
 
-        if (data['status'] == 'OK') {
-          GoogleMapController controller = await _mapController.future;
-          controller.animateCamera(
-            CameraUpdate.newLatLng(
-              LatLng(latitude, longitude),
-            ),
+        List<dynamic> result = data["results"]; //다이나믹 리스트 형태로 받아옴
+
+        List<PlaceNearby> placeNear = result.map((data) => PlaceNearby.fromJson(data)).toList(); //PlaceNearby를 인스턴스화함 .
+        //result를 PlaceNearby클래스로 변경해서 받아줌
+
+        List<String> placeIdList= [];
+
+        for(int i =0; i <placeNear.length; i++) {
+          PlaceNearby placeNearby = placeNear[i];
+          placeIdList.add(placeNearby.placeId);
+          _markers.add(
+              Marker(
+                markerId: MarkerId(placeNearby.placeId),
+                position: LatLng(
+                  placeNearby.lat,
+                 placeNearby.lng,
+                ),
+                infoWindow: InfoWindow(
+                    title: placeNearby.name,
+                    snippet: placeNearby.vicinity,
+                    onTap: () {
+                     //  print("${placeNearby.name}");
+                     // googleMapServices.getPlaceDetailList(placeNearby.placeId);
+                    }
+                ),
+              ),
           );
+          // googleMapServices.getPlaceDetailList(placeNearby.placeId);
 
-          print('place nearby - $placeDetail ,  ${placeNearby?.result}');
-          final foundPlaces = placeNearby.result;
 
-          for(int i =0; i <foundPlaces.length; i++) {
-            final mark = PlaceNearby.fromJson(foundPlaces[i]);
-            _markers.add(
-                Marker(
-                  markerId: MarkerId(placeNearby.id),
-                  position: LatLng(
-                    placeNearby.lat,
-                    placeNearby.lng,
-                  ),
-                  infoWindow: InfoWindow(
-                      title: placeNearby.name,
-                      snippet: placeNearby.vicinity
-                  ),
-                )
-            );
-            return mark;
-          }
+        }//내가 준비한 데이터를 지도위에 보여주기 위해서 임. 쓰는 부분.
 
           setState(() {
             _markers;
           });
-        }
+
+
       } else {
         print('Fail to fetch place data');
-      }
-    } catch (e) {
-      return null;
+      } } catch (e) {
+      print(e);
     }
+
   }
+
+  // void getPlaceDetailList(List<String> placeIdList) {
+  //
+  //   List details = [];
+  //
+  //   for(int i =0; i <placeIdList.length; i ++) {
+  //     details.add(googleMapServices.getPlaceDetailList(placeIdList[i]));
+  //   }
+  //   Future.wait([googleMapServices.getPlaceDetailList("placeId")]); //future를 여러개 동시에 쓸수 있는 네트워크요청
+  // }
 
   void _submit() {
     if (!_fbkey.currentState.validate()) {
-      return;
-    }
+      return; //_formKey라는 Globalkey를 등록한 Form이 유효하지 않으면 작동안함
+    } //retrun ;으로 if문 의 종료를의미
 
     _fbkey.currentState.save();
     final inputValues = _fbkey.currentState.value;
     final id = inputValues['placeId'];
-    print(id);
+    // print(id);
 
     final foundPlace = places.firstWhere(
       (place) => place['id'] == id,
       orElse: () => null,
-    );
+    );  //조건에 맞는 데이터 필터링
 
-    print(foundPlace['placeName']);
-
-    print('place detail - lat ${placeDetail.lat}, lng ${placeDetail.lng}');
     _searchPlaces(foundPlace['placeName'], placeDetail.lat, placeDetail.lng);
 
     Navigator.of(context).pop();
@@ -200,7 +220,8 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             infoWindow: InfoWindow(
               title: "동네",
               snippet: "흥미로운 곳",
-            )),
+            ),
+        ),
       );
     });
   }
@@ -214,7 +235,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   void _moveCamera() async {
     GoogleMapController controller = await _mapController.future;
     controller.animateCamera(
-      CameraUpdate.newLatLng(LatLng(placeDetail.lat, placeDetail.lng)),
+      CameraUpdate.newLatLng(LatLng(placeDetail?.lat, placeDetail.lng)),
     );
 
     setState(() {
@@ -246,7 +267,10 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             backgroundColor: Colors.white,
             elevation: 0.0,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: kcolorgrey),
+              icon: Icon(
+                  Icons.arrow_back,
+                  color: kcolorgrey
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
@@ -275,11 +299,16 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             ]),
       ),
       drawer: ReviewDrawer(w: w),
-      body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
         Row(
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 30, left: 15),
+              padding: const EdgeInsets.only(
+                  top: 30,
+                  left: 15
+              ),
               child: Container(
                 width: w,
                 height: 40,
@@ -291,43 +320,16 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                           color: Colors.grey.withOpacity(0.2),
                           spreadRadius: 3,
                           blurRadius: 3,
-                          offset: Offset(0, 1)),
+                          offset: Offset(0, 1)
+                      ),
                     ]),
-                child: TypeAheadField(
-                  debounceDuration: Duration(milliseconds: 500),
-                  textFieldConfiguration: TextFieldConfiguration(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      contentPadding: EdgeInsets.only(left: 10),
-                      border: InputBorder.none,
-                      hintText: '장소를 검색하세요', //검색시에 즐찾 가게를 찾을 수 있게
-                      hintStyle: GoogleFonts.nanumGothic(color: Colors.grey),
-                    ),
-                  ),
-                  suggestionsCallback: (pattern) async {
-                    if (sessionToken == null) {
-                      sessionToken = uuid.v4();
-                    }
-                    googleMapServices =
-                        GoogleMapServices(sessionToken: sessionToken);
-                    return await googleMapServices.getSuggestions(pattern);
-                  },
-                  itemBuilder: (context, suggestion) {
-                    return ListTile(
-                      title: Text(suggestion.description),
-                    );
-                  },
-                  onSuggestionSelected: (suggestion) async {
-                    placeDetail = await googleMapServices.getPlaceDetail(
-                        suggestion.placeId, sessionToken);
-                    sessionToken = null;
-                    _moveCamera();
-                  },
-                ),
+                child:placeInputFiled(),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 30, left: 15),
+              padding: const EdgeInsets.only(
+                  top: 30,
+                  left: 15),
               child: IconButton(
                   icon: Icon(
                     Icons.search,
@@ -366,7 +368,9 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                       label: Text(
                         "근처의 가게찾기",
                         style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold
+                        ),
                       ),
                       elevation: 3,
                       backgroundColor: pointColor,
@@ -380,15 +384,19 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
         SlidingUpPanel(
           maxHeight: 270,
           minHeight: 110,
-          borderRadius: BorderRadius.only(topRight: Radius.circular(40)),
+          borderRadius: BorderRadius.only(
+              topRight: Radius.circular(40)
+          ),
           panel: Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: EdgeInsets.only(top: 21, left: 25),
+                  padding: EdgeInsets.only(
+                      top: 21,
+                      left: 25),
                   child: Text(
-                    placeDetail?.name ?? "현재위치", //지도에 현재 위치 표시, null없애기ㅠ
+                    placeDetail?.name ?? "현재위치", //널 세이프티하게 처리
                     style: GoogleFonts.nanumGothic(
                         fontSize: 28, fontWeight: FontWeight.bold),
                   ),
@@ -415,4 +423,40 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
       ]),
     );
   }
+
+ Widget placeInputFiled()  {
+    return TypeAheadField(
+                debounceDuration: Duration(milliseconds: 500),
+                textFieldConfiguration: TextFieldConfiguration(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.only(left: 10),
+                    border: InputBorder.none,
+                    hintText: '장소를 검색하세요', //검색시에 즐찾 가게를 찾을 수 있게
+                    hintStyle: GoogleFonts.nanumGothic(color: Colors.grey),
+                  ),
+                ),
+                suggestionsCallback: placeSugestion,
+                itemBuilder: (context, suggestion) {
+                  return ListTile(
+                    title: Text(suggestion.description),
+                  );
+                },
+                onSuggestionSelected: (suggestion) async {
+                  placeDetail = await googleMapServices.getPlaceDetail(
+                      suggestion.placeId);
+                  sessionToken = null;
+                  _moveCamera();
+                },
+              );
+  }
+
+ FutureOr<List<Place>> placeSugestion(String pattern) async {
+               if (sessionToken == null) {
+                 sessionToken = uuid.v4();
+               }
+               googleMapServices =
+                   GoogleMapServices(sessionToken: sessionToken);
+               return await googleMapServices.getSuggestions(pattern);
+             }
 }
