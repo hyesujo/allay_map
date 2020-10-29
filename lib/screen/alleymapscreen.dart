@@ -35,6 +35,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   double zoomLevelMin = 0;
   GlobalKey<FormBuilderState> _fbkey = GlobalKey<FormBuilderState>();
 
+  List<PlaceNearby> placeIdList= [];
   var uuid = Uuid();
 
   dynamic sessionToken;
@@ -60,7 +61,9 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
     mapCtrl.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
-            target: LatLng(currentPos.latitude, currentPos.longitude),
+            target: LatLng(
+                currentPos.latitude,
+                currentPos.longitude),
             zoom: zoomLevel),
       ),
     );
@@ -156,22 +159,18 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                     title: placeNearby.name,
                     snippet: placeNearby.vicinity,
                     onTap: () {
-                     //  print("${placeNearby.name}");
+                    //  print("${placeNearby.name}");
                      // googleMapServices.getPlaceDetailList(placeNearby.placeId);
                     }
                 ),
               ),
           );
           // googleMapServices.getPlaceDetailList(placeNearby.placeId);
-
-
-        }//내가 준비한 데이터를 지도위에 보여주기 위해서 임. 쓰는 부분.
+        }//내가 준비한 데이터를 지도위에 보여주기 위해서 임
 
           setState(() {
             _markers;
           });
-
-
       } else {
         print('Fail to fetch place data');
       } } catch (e) {
@@ -235,11 +234,13 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   void _moveCamera() async {
     GoogleMapController controller = await _mapController.future;
     controller.animateCamera(
-      CameraUpdate.newLatLng(LatLng(placeDetail?.lat, placeDetail.lng)),
+      CameraUpdate.newLatLng(
+          LatLng(placeDetail?.lat, placeDetail.lng)),
     );
 
     setState(() {
-      _markers.add(Marker(
+      _markers.add(
+          Marker(
         markerId: MarkerId(placeDetail.name),
         position: LatLng(placeDetail.lat, placeDetail.lng),
         infoWindow: InfoWindow(
@@ -394,14 +395,18 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                 Container(
                   padding: EdgeInsets.only(
                       top: 21,
-                      left: 25),
+                      left: 25
+                  ),
                   child: Text(
                     placeDetail?.name ?? "현재위치", //널 세이프티하게 처리
                     style: GoogleFonts.nanumGothic(
-                        fontSize: 28, fontWeight: FontWeight.bold),
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold
+                    ),
                   ),
                 ),
-                Row(children: [
+                Row(
+                    children: [
                   Container(
                     padding: EdgeInsets.only(left: 25),
                     child: Text(
@@ -413,20 +418,33 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                   Container(
                     padding: EdgeInsets.only(left: 25),
                     child: IconButton(
-                        icon: Icon(Icons.expand_more), onPressed: () {}),
+                        icon: Icon(Icons.expand_more),
+                        onPressed: () {}),
                   )
-                ]),
-              ],
-            ),
+                ]
+                ),
+                SizedBox(height: 10),
+                // ListView.builder(
+                //   itemCount: this.placeIdList.length,
+                //     itemBuilder: (context,index) {
+                //  final placelist = this.placeIdList[index];
+                //   return ListTile(
+                //     title: Text(placelist.name),
+                //      );
+                // }),
+    ],
           ),
         )
-      ]),
+        )
+          ]),
     );
   }
 
  Widget placeInputFiled()  {
     return TypeAheadField(
-                debounceDuration: Duration(milliseconds: 500),
+                debounceDuration: Duration(
+                    milliseconds: 500
+                ),
                 textFieldConfiguration: TextFieldConfiguration(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -458,5 +476,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                googleMapServices =
                    GoogleMapServices(sessionToken: sessionToken);
                return await googleMapServices.getSuggestions(pattern);
-             }
+             } //세션토큰이 필요없을거 같음.
+
 }
+

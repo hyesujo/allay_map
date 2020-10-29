@@ -37,7 +37,6 @@ class PlaceDetail {
   final double lat;
   final double lng;
   final double rating;
-  final List review;
   final String icon;
 
   PlaceDetail({
@@ -49,7 +48,6 @@ class PlaceDetail {
     this.lat,
     this.lng,
     this.rating,
-    this.review,
     this.icon,
   });
 
@@ -62,8 +60,7 @@ class PlaceDetail {
        website: json['website'] ??'',
        lat: json['geometry']['location']['lat'],
        lng : json['geometry']['location']['lng'],
-       rating: json["rating"] ?? 0.0,
-       review: json["reviews"],
+       rating: (json["rating" != null]) ? json['rating'] : null,
        icon:  json["icon"],
       );
        
@@ -77,7 +74,6 @@ class PlaceDetail {
       'website': this.website,
       'lat': this.lat,
       'lng': this.lng,
-      'reviews' : this.review,
       'icon' : this.icon,
     };
   }

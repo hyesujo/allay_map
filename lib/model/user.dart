@@ -10,7 +10,7 @@ class User {
 });
 }
 
-  User user  =User(
+  User user  = User(
       name: "Johyesu",
       content: "골목탐험가",
       image: "assets/images/blue3.jpg"
