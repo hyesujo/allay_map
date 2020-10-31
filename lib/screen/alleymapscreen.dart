@@ -34,11 +34,12 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   double zoomLevelMax = 20;
   double zoomLevelMin = 0;
   GlobalKey<FormBuilderState> _fbkey = GlobalKey<FormBuilderState>();
+  final panelController = PanelController();
 
   List<PlaceNearby> placeIdList= [];
   var uuid = Uuid();
 
-  dynamic sessionToken;
+  var sessionToken;
 
   PlaceDetail placeDetail; //선언만 해준 상태이니 인스턴스 화를 해줘야 함
   PlaceNearby placeNearby;
@@ -55,7 +56,8 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
     });
 
     placeDetail = PlaceDetail(lng: pos.longitude, lat: pos.latitude); //placeDetail 인스턴스화함
-    print('google map - ${currentPos.latitude}');
+    print('google mapff - ${currentPos.latitude}');
+
 
     GoogleMapController mapCtrl = await _mapController.future;
     mapCtrl.animateCamera(
@@ -159,6 +161,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                     title: placeNearby.name,
                     snippet: placeNearby.vicinity,
                     onTap: () {
+                      //여기다가 담아줘야 하는지..
                     //  print("${placeNearby.name}");
                      // googleMapServices.getPlaceDetailList(placeNearby.placeId);
                     }
@@ -167,7 +170,6 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
           );
           // googleMapServices.getPlaceDetailList(placeNearby.placeId);
         }//내가 준비한 데이터를 지도위에 보여주기 위해서 임
-
           setState(() {
             _markers;
           });
@@ -232,17 +234,27 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   }
 
   void _moveCamera() async {
-    GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(
-      CameraUpdate.newLatLng(
-          LatLng(placeDetail?.lat, placeDetail.lng)),
-    );
+    try{
+      GoogleMapController controller = await _mapController.future;
+      controller.animateCamera(
+        CameraUpdate.newLatLng(
+            LatLng(
+                placeDetail.lat,
+                placeDetail.lng)),
+      );
+    } catch(e) {
+      print("error?? -$e");
+
+    }
+
+    print("noo - ${placeDetail.lat}");
+    print("noo - ${placeDetail.lng}");
 
     setState(() {
       _markers.add(
           Marker(
         markerId: MarkerId(placeDetail.name),
-        position: LatLng(placeDetail.lat, placeDetail.lng),
+        position: LatLng(placeDetail?.lat, placeDetail.lng),
         infoWindow: InfoWindow(
             title: placeDetail.name,
             snippet: placeDetail.formattedAddress),
@@ -383,6 +395,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
           ),
         ),
         SlidingUpPanel(
+          controller: panelController,
           maxHeight: 270,
           minHeight: 110,
           borderRadius: BorderRadius.only(
@@ -431,7 +444,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                 //   return ListTile(
                 //     title: Text(placelist.name),
                 //      );
-                // }),
+                // }), //
     ],
           ),
         )
@@ -460,11 +473,17 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                     title: Text(suggestion.description),
                   );
                 },
+
                 onSuggestionSelected: (suggestion) async {
-                  placeDetail = await googleMapServices.getPlaceDetail(
-                      suggestion.placeId);
-                  sessionToken = null;
-                  _moveCamera();
+                  try {
+                    placeDetail = await googleMapServices.getPlaceDetail(
+                        suggestion.placeId);
+                    sessionToken = null;
+                    _moveCamera();
+                  } catch(e){
+                    print("error111 -$e");
+                  }
+
                 },
               );
   }
@@ -476,7 +495,13 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                googleMapServices =
                    GoogleMapServices(sessionToken: sessionToken);
                return await googleMapServices.getSuggestions(pattern);
-             } //세션토큰이 필요없을거 같음.
+             }
 
+ Widget buildSlidingPanel({
+   @required PanelController panelController}) {
+  return GestureDetector(
+    onTap: panelController.open,
+  );
+ }
 }
 

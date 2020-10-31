@@ -18,10 +18,11 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
   List<File> userImages;
   File _image;
   int userImageIndex = 0;
-  PickedFile _imagefile;
   GlobalKey<ScaffoldState> _sdkey = GlobalKey<ScaffoldState>();
   final ImagePicker picker = ImagePicker();
   ScrollController sController;
+  bool nextIconView = false;
+  TextEditingController _contentCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -35,7 +36,7 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
     super.initState();
   }
 
-  bool nextIconView = false;
+
 
   void iconView() {
     if(sController.offset >= sController.position.maxScrollExtent) {
@@ -191,12 +192,27 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
                   left: 30,
                   top: 35
               ),
-              child: Text(
-                "사진을 올려주세요:)",
-                style: TextStyle(
-                    fontSize: 23,
-                    fontWeight: FontWeight.w600
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children:[
+                  Text(
+                    "사진을 올려주세요:)",
+                    style: TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.w600
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: 5),
+                    child: Text("(선택)",
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: greyColor
+                      ),
+                    ),
+                  ),
+                ]
               ),
             ),
             Container(
@@ -210,7 +226,7 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
                     "리뷰가 삭제될 수 있습니다.",
                 style: TextStyle(
                   color: greyColor,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w400
                 ),
               ),
@@ -247,11 +263,11 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
               child: Container(
                 padding: EdgeInsets.only(
                     left: 20,
-                top: 10
+                top: 13
                 ),
                 child: Container(
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height /5,
+                  height: MediaQuery.of(context).size.height /5.5,
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,15 +312,9 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
                               shrinkWrap: true,
                               itemCount: this.userImages.length,
                               itemBuilder: (BuildContext context, int index){
-                              return Stack(
+                                  return Stack(
                                 children:[
-                           InkWell(
-                               onTap: () {
-                                 setState(() {
-                                   this.userImageIndex = index;
-                                 });
-                               },
-                               child: Container(
+                               Container(
                                  width: MediaQuery.of(context).size.width *0.3,
                                  height: MediaQuery.of(context).size.height *0.15,
                                  child: Card(
@@ -319,18 +329,124 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
                                    ),
                                  ),
                                ),
-                           ),
+                                  Positioned(
+                                    top: -5,
+                                      right: -1,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            this.userImages
+                                                .remove(this.userImages[index]);
+                                            iconCountCheck();
+                                          });
+                                        },
+                                        child: Container(
+                                          width: 30.0,
+                                          height: 30.0,
+                                          margin: EdgeInsets.all(5.0),
+                                          decoration: BoxDecoration(
+                                            color: Colors.redAccent,
+                                            borderRadius: BorderRadius.circular(30)
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.close,
+                                              size: 20.0,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ),
                                 ]
                               );
                               }),
                             ),
                         ),
-              ]
+                      ]
+                    ),
                   ),
+              ),
+            ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                  left: 30,
+                  top: 10
+              ),
+              child: Text(
+                "리뷰를 작성해주세요.",
+                style: TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w600
                 ),
               ),
             ),
-            )
+            Container(
+              padding: EdgeInsets.only(
+                  left: 30,
+                  top: 20
+              ),
+              child: Container(
+                child: TextFormField(
+                  controller: _contentCtrl,
+                  minLines: 1,
+                  maxLines: 4,
+                  validator: (value) {
+                    if(value.isEmpty) {
+                      return "리뷰를 입력해주세요";
+                    } else
+                      return null;
+                  },
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.only(
+                      top: 10,
+                      left: 10,
+                      right: 5
+                    ),
+                    hintText: "방문하신 곳에서 있었던 일, 느꼈던 것을 편안하게 작성해 주세요.",
+                  ),
+                ),
+                width: MediaQuery.of(context).size.width *0.82,
+                height: MediaQuery.of(context).size.height /3.8,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                      color: Colors.black45,
+                  width: 2.0
+                  )
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 30
+              ),
+              child: FlatButton(
+                  onPressed: (){},
+                color: pointColor,
+                child: Container(
+                  width: MediaQuery.of(context).size.width *0.74,
+                  height: MediaQuery.of(context).size.height /13,
+                  child: Center(
+                      child: Text("저장하기",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17
+                        ),
+                      ),
+                  ),
+                ),
+                ),
+            ),
+          SizedBox(
+            height: 20,
+          )
           ],
         ),
       ),
@@ -350,10 +466,29 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
   void getImage() async {
     PickedFile pickedFile =
     await picker.getImage(source: ImageSource.gallery);
+    if(pickedFile ==null) return;
+
+    File pathfile = File(pickedFile.path);
 
     setState(() {
-      _imagefile = pickedFile;
+    this.userImages.add(pathfile);
     });
-  } //갤러리에 있는 이미지를 가져오는게 안된다.
+    Navigator.of(context).pop();
+  }
+
+  void iconCountCheck() {
+    if (userImages.length >= 2) {
+      nextIconView = true;
+      return;
+    }
+    nextIconView =false;
+    return;
+  }
+
+  Widget iconViewContainer() {
+    return Container(
+      child: Icon(Icons.add),
+    );
+  }
 }
 
