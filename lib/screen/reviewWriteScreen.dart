@@ -292,6 +292,7 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
                                 Padding(
                                   padding: EdgeInsets.only(
                                     top: 10,
+
                                     right: 10
                                   ),
                                   child: Text(

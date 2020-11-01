@@ -37,6 +37,11 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   final panelController = PanelController();
 
   List<PlaceNearby> placeIdList= [];
+  List<PlaceNearby> placeIdMockList= [
+    PlaceNearby(placeId: "placeId1", lat: 35.68, lng: 36.32, name: "우리동네", vicinity: "2"),
+    PlaceNearby(placeId: "placeId2", lat: 37.68, lng: 35.32, name: "너네동네", vicinity: "서울")
+  ];
+
   var uuid = Uuid();
 
   var sessionToken;
@@ -140,39 +145,57 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
       if (_response.statusCode == 200) {
         final data = json.decode(_response.body);
 
-        List<dynamic> result = data["results"]; //다이나믹 리스트 형태로 받아옴
 
-        List<PlaceNearby> placeNear = result.map((data) => PlaceNearby.fromJson(data)).toList(); //PlaceNearby를 인스턴스화함 .
-        //result를 PlaceNearby클래스로 변경해서 받아줌
 
-        List<String> placeIdList= [];
+        if(data['status'] =='OK') {
+          GoogleMapController controller = await _mapController.future;
+          controller.animateCamera(
+              CameraUpdate.newLatLng(LatLng(
+                  latitude, longitude
+              )));
 
-        for(int i =0; i <placeNear.length; i++) {
-          PlaceNearby placeNearby = placeNear[i];
-          placeIdList.add(placeNearby.placeId);
-          _markers.add(
+          List<dynamic> result = data["results"]; //다이나믹 리스트 형태로 받아옴
+          List<PlaceNearby> placeNear = result.map((data) =>
+              PlaceNearby.fromJson(data)).toList(); //PlaceNearby를 인스턴스화함 .
+          //result를 PlaceNearby클래스로 변경해서 받아줌
+
+          List<String> placeIdList = [];
+
+          for (int i = 0; i < placeNear.length; i++) {
+            PlaceNearby placeNearby = placeNear[i];
+            placeIdList.add(placeNearby.placeId);
+
+            // print('add PlaceId -${placeNearby.placeId}');
+
+            _markers.add(
               Marker(
                 markerId: MarkerId(placeNearby.placeId),
                 position: LatLng(
                   placeNearby.lat,
-                 placeNearby.lng,
+                  placeNearby.lng,
                 ),
                 infoWindow: InfoWindow(
                     title: placeNearby.name,
                     snippet: placeNearby.vicinity,
                     onTap: () {
                       //여기다가 담아줘야 하는지..
-                    //  print("${placeNearby.name}");
-                     // googleMapServices.getPlaceDetailList(placeNearby.placeId);
+                      //  print("${placeNearby.name}");
+                      // googleMapServices.getPlaceDetailList(placeNearby.placeId);
                     }
                 ),
               ),
-          );
-          // googleMapServices.getPlaceDetailList(placeNearby.placeId);
-        }//내가 준비한 데이터를 지도위에 보여주기 위해서 임
+            );
+            // googleMapServices.getPlaceDetailList(placeNearby.placeId);
+          } //내가 준비한 데이터를 지도위에 보여주기 위해서 임
           setState(() {
             _markers;
           });
+
+          print('place id list - ${placeIdList}');
+          var detailDataResult = await getPlaceDetails(placeIdList); //함수이름 바꿀때 리네임기능쓰기
+          print("detail1122 - ${detailDataResult}");
+
+        }
       } else {
         print('Fail to fetch place data');
       } } catch (e) {
@@ -181,15 +204,25 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
 
   }
 
-  // void getPlaceDetailList(List<String> placeIdList) {
-  //
-  //   List details = [];
-  //
-  //   for(int i =0; i <placeIdList.length; i ++) {
-  //     details.add(googleMapServices.getPlaceDetailList(placeIdList[i]));
-  //   }
-  //   Future.wait([googleMapServices.getPlaceDetailList("placeId")]); //future를 여러개 동시에 쓸수 있는 네트워크요청
-  // }
+  Future<List> getPlaceDetails(List<String> placeIdList) {
+
+    List details = [];
+
+    for(int i =0; i <placeIdList.length; i ++) {
+      print('placeId1111-${placeIdList[i]}');
+      try {
+        details.add(googleMapServices.getPlaceDetailList(placeIdList[i]));
+      } catch(e){
+        print('detail add -$e');
+      }
+
+    }
+    print('get place Detaillist');
+
+    return Future.wait(
+      [...details] //리스트끼리 합친다.
+    );
+  }
 
   void _submit() {
     if (!_fbkey.currentState.validate()) {
@@ -437,14 +470,16 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                 ]
                 ),
                 SizedBox(height: 10),
-                // ListView.builder(
-                //   itemCount: this.placeIdList.length,
-                //     itemBuilder: (context,index) {
-                //  final placelist = this.placeIdList[index];
-                //   return ListTile(
-                //     title: Text(placelist.name),
-                //      );
-                // }), //
+                Flexible(child: ListView.builder(
+                    itemCount: placeIdMockList.length,
+                    itemBuilder: (context,index) {
+                      final placelist = this.placeIdMockList[index];
+                      print('placeList =${placeIdMockList.length}');
+                      return ListTile(
+                        title: Text(placelist.name),
+                      );
+                    }),
+                ),
     ],
           ),
         )
@@ -488,7 +523,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
               );
   }
 
- FutureOr<List<Place>> placeSugestion(String pattern) async {
+              FutureOr<List<Place>> placeSugestion(String pattern) async {
                if (sessionToken == null) {
                  sessionToken = uuid.v4();
                }

@@ -37,6 +37,7 @@ class PlaceDetail {
   final double lat;
   final double lng;
   final double rating;
+  final List reviews;
   final String icon;
 
   PlaceDetail({
@@ -45,6 +46,7 @@ class PlaceDetail {
     this.name,
     this.vicinity,
     this.website = '',
+    this.reviews,
     this.lat,
     this.lng,
     this.rating,
@@ -57,24 +59,26 @@ class PlaceDetail {
        formattedPhoneNumber: json['formatted_phone_number'],
        name: json['name'] ??'현재위치',
        vicinity: json['vicinity'],
-       website: json['website'] ??'',
-       lat: json['geometry']['location']['lat'],
-       lng : json['geometry']['location']['lng'],
-       rating: (json["rating" != null]) ? json['rating'] : null,
+       reviews: json['reviews'],
+       website: json['website'] ?? '',
+       lat: json['geometry']['location']['lat'] ?? 0.0,
+       lng : json['geometry']['location']['lng'] ?? 0.0,
+       rating:  json['rating'] ?? 0.0,
        icon:  json["icon"],
       );
        
 
   Map<String, dynamic> toMap(){
     return {
-      'formateedAddress': this.formattedAddress,
-      'formateedPhoneNumber': this.formattedPhoneNumber,
+      'formattedAddress': this.formattedAddress,
+      'formattedPhoneNumber': this.formattedPhoneNumber,
       'name': this.name,
       'vicinity': this.vicinity,
       'website': this.website,
       'lat': this.lat,
       'lng': this.lng,
       'icon' : this.icon,
+      'reviews' :this.reviews
     };
   }
 }

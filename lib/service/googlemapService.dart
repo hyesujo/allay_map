@@ -63,17 +63,16 @@ class GoogleMapServices {
       return PlaceDetail.fromJson(result);
     }
     catch(e){
+      print("detailApierror -$e");
       return null;
     }
   }
 
   Future<PlaceDetail> getPlaceDetailList(String placeId) async {
-    final String baseUrl =
-        'https://maps.googleapis.com/maps/api/place/details/json';
-    String url =
-        '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko';
-    // --> final String _url ='$baseUrl?key=$API_KEY&place_id=$placeId&language=ko&sessiontoken=$token';
-    print("placeDetail url -$url");
+    final String baseUrl = 'https://maps.googleapis.com/maps/api/place/details/json';
+    String url = '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko';
+
+    print('place detail api url - ${url}');
     // 예외처리
     // -> public || private
 
@@ -92,25 +91,4 @@ class GoogleMapServices {
       return null;
     }
   }
-
-  // Future<List<PlaceNearby>> getPlaceNearbyList(String locationName, double latitude, double longitude) async {
-  //   final String nearurl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
-  //   String _url =  "$nearurl?key=$API_KEY&location=$latitude,$longitude&radius=1500&language=ko&keyword=$locationName";
-  //   try {
-  //     final http.Response _resposenear = await http.get(_url);
-  //     final _responseData = json.decode(_resposenear.body);
-  //     final result = _responseData['results'];
-  //     List<PlaceNearby> placeNear = result.map((data) => PlaceNearby.fromJson(data)).toList();
-  //
-  //     List<PlaceNearby> placeIdList= [];
-  //     for(int i =0; i <placeNear.length; i++) {
-  //      final placenear = PlaceNearby.fromJson(result[i]);
-  //      placeIdList.add(placenear);
-  //     }
-  //     return placeIdList;
-  //   } catch(e) {
-  //     print(e);
-  //   }
-  // return null;
-  // }
-}  //getPlaceNearbyList 만들어서 Slinduppannel에 쓸수 있나요?
+}
