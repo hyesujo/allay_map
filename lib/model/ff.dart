@@ -18,3 +18,15 @@
 //   }
 // return null;
 // }
+
+
+// print("url- $url");
+// print("search api response code - ${_response.statusCode}");
+// print("search api response code - ${_response.body}");
+// print('responseData - $data');
+// print("reult -${data["results"]}");
+
+ // List<PlaceNearby> placeIdMockList= [
+//   PlaceNearby(placeId: "placeId1", lat: 35.68, lng: 36.32, name: "우리동네", vicinity: "2"),
+//   PlaceNearby(placeId: "placeId2", lat: 37.68, lng: 35.32, name: "너네동네", vicinity: "서울")
+// ];

@@ -13,14 +13,14 @@ class GoogleMapServices {
 });
 
   Future<List<Place>> getSuggestions(String query) async {
+
     final String baseUrl =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String type = 'establishment';
     String url =
         '$baseUrl?input=$query&key=$API_KEY&type=$type&language=ko&components=country:kr&sessiontoken=$sessionToken';
 
-    print(url);
-
+    try{
     final http.Response response = await http.get(url);
     final responseData = json.decode(response.body);
     final predictions = responseData['predictions'];
@@ -31,8 +31,12 @@ class GoogleMapServices {
       final place = Place.fromJson(predictions[i]);
       suggestions.add(place);
     }
-
     return suggestions;
+    } catch(e) {
+
+      print('getSuggestion error -$e');
+    }
+    return null;
   }
 
   // -> 어떻게 분기해야하는가? 값으로 인식 -> 있다 || 없다 -> 있는데 원하는 값이다 || 아니다
@@ -44,7 +48,7 @@ class GoogleMapServices {
   Future<PlaceDetail> getPlaceDetail(String placeId) async {
     final String baseUrl =
         'https://maps.googleapis.com/maps/api/place/details/json';
-   String url =
+     String url =
         '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko';
    // --> final String _url ='$baseUrl?key=$API_KEY&place_id=$placeId&language=ko&sessiontoken=$token';
     print("placeDetail url -$url");
@@ -72,7 +76,7 @@ class GoogleMapServices {
     final String baseUrl = 'https://maps.googleapis.com/maps/api/place/details/json';
     String url = '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko';
 
-    print('place detail api url - ${url}');
+    print('place detail api url - $url');
     // 예외처리
     // -> public || private
 

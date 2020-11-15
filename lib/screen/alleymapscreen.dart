@@ -3,10 +3,14 @@ import 'dart:convert';
 import 'package:alleymap_app/config.dart';
 import 'package:alleymap_app/constant.dart';
 import 'package:alleymap_app/model/place.dart';
+import 'package:alleymap_app/screen/reviewWriteScreen.dart';
+import 'package:alleymap_app/service/Place_Service.dart';
 import 'package:alleymap_app/service/googlemapService.dart';
 import 'package:alleymap_app/widget/ReviewDrawer.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,20 +40,19 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   GlobalKey<FormBuilderState> _fbkey = GlobalKey<FormBuilderState>();
   final panelController = PanelController();
 
-  List<PlaceNearby> placeIdList= [];
-  List<PlaceNearby> placeIdMockList= [
-    PlaceNearby(placeId: "placeId1", lat: 35.68, lng: 36.32, name: "우리동네", vicinity: "2"),
-    PlaceNearby(placeId: "placeId2", lat: 37.68, lng: 35.32, name: "너네동네", vicinity: "서울")
-  ];
+  List<PlaceNearby> placeIdList = [];
 
   var uuid = Uuid();
-
   var sessionToken;
 
   PlaceDetail placeDetail; //선언만 해준 상태이니 인스턴스 화를 해줘야 함
   PlaceNearby placeNearby;
 
   GoogleMapServices googleMapServices;
+
+  PlaceService _placeService = PlaceService();
+
+  List<PlaceNearby> placeNearbyList = [];
 
   void getCurrentPosition() async {
     LocationData pos = await location.getLocation();
@@ -60,17 +63,26 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
       );
     });
 
-    placeDetail = PlaceDetail(lng: pos.longitude, lat: pos.latitude); //placeDetail 인스턴스화함
+    placeDetail =
+        PlaceDetail(lng: pos.longitude, lat: pos.latitude); //placeDetail 인스턴스화함
     print('google mapff - ${currentPos.latitude}');
 
-
+    // _placeService.listPlace().then((value) => print(value));
+    _placeService
+        .listPlacebyLocation(LatLng(pos.latitude, pos.longitude))
+        .listen((List<DocumentSnapshot> docs) {
+      print('place list by -${docs.length}');
+      List<PlaceNearby> nearbyList =
+          docs.map((doc) => PlaceNearby.fromFirebase(doc.data())).toList();
+      setState(() {
+        this.placeNearbyList = nearbyList;
+      });
+    });
     GoogleMapController mapCtrl = await _mapController.future;
     mapCtrl.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
-            target: LatLng(
-                currentPos.latitude,
-                currentPos.longitude),
+            target: LatLng(currentPos.latitude, currentPos.longitude),
             zoom: zoomLevel),
       ),
     );
@@ -124,8 +136,8 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
         });
   }
 
-  void _searchPlaces(String locationName, double latitude, double longitude)
-  async {
+  void _searchPlaces(
+      String locationName, double latitude, double longitude) async {
     _markers.clear();
 
     final String nearUrl =
@@ -134,29 +146,19 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
     String _url =
         "$nearUrl?key=$API_KEY&location=$latitude,$longitude&radius=1500&language=ko&keyword=$locationName";
 
-    // print("url- $url");
-    // print("search api response code - ${_response.statusCode}");
-    // print("search api response code - ${_response.body}");
-    // print('responseData - $data');
-    // print("reult -${data["results"]}");
-
     try {
       final http.Response _response = await http.get(_url);
       if (_response.statusCode == 200) {
         final data = json.decode(_response.body);
-
-
-
-        if(data['status'] =='OK') {
+        if (data['status'] == 'OK') {
           GoogleMapController controller = await _mapController.future;
           controller.animateCamera(
-              CameraUpdate.newLatLng(LatLng(
-                  latitude, longitude
-              )));
+              CameraUpdate.newLatLng(LatLng(latitude, longitude)));
 
           List<dynamic> result = data["results"]; //다이나믹 리스트 형태로 받아옴
-          List<PlaceNearby> placeNear = result.map((data) =>
-              PlaceNearby.fromJson(data)).toList(); //PlaceNearby를 인스턴스화함 .
+          List<PlaceNearby> placeNear = result
+              .map((data) => PlaceNearby.fromJson(data))
+              .toList(); //PlaceNearby를 인스턴스화함 .
           //result를 PlaceNearby클래스로 변경해서 받아줌
 
           List<String> placeIdList = [];
@@ -178,11 +180,9 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                     title: placeNearby.name,
                     snippet: placeNearby.vicinity,
                     onTap: () {
-                      //여기다가 담아줘야 하는지..
                       //  print("${placeNearby.name}");
                       // googleMapServices.getPlaceDetailList(placeNearby.placeId);
-                    }
-                ),
+                    }),
               ),
             );
             // googleMapServices.getPlaceDetailList(placeNearby.placeId);
@@ -191,37 +191,34 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             _markers;
           });
 
-          print('place id list - ${placeIdList}');
-          var detailDataResult = await getPlaceDetails(placeIdList); //함수이름 바꿀때 리네임기능쓰기
-          print("detail1122 - ${detailDataResult}");
-
+          print('place id list - $placeIdList');
+          var detailDataResult =
+              await getPlaceDetails(placeIdList); //함수이름 바꿀때 리네임기능쓰기
+          print("detail1122 - $detailDataResult");
         }
       } else {
         print('Fail to fetch place data');
-      } } catch (e) {
+      }
+    } catch (e) {
       print(e);
     }
-
   }
 
   Future<List> getPlaceDetails(List<String> placeIdList) {
-
     List details = [];
 
-    for(int i =0; i <placeIdList.length; i ++) {
+    for (int i = 0; i < placeIdList.length; i++) {
       print('placeId1111-${placeIdList[i]}');
       try {
         details.add(googleMapServices.getPlaceDetailList(placeIdList[i]));
-      } catch(e){
+      } catch (e) {
         print('detail add -$e');
       }
-
     }
     print('get place Detaillist');
 
-    return Future.wait(
-      [...details] //리스트끼리 합친다.
-    );
+    return Future.wait([...details] //리스트끼리 합친다.
+        );
   }
 
   void _submit() {
@@ -237,7 +234,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
     final foundPlace = places.firstWhere(
       (place) => place['id'] == id,
       orElse: () => null,
-    );  //조건에 맞는 데이터 필터링
+    ); //조건에 맞는 데이터 필터링
 
     _searchPlaces(foundPlace['placeName'], placeDetail.lat, placeDetail.lng);
 
@@ -250,11 +247,11 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
     setState(() {
       _markers.add(
         Marker(
-            markerId: MarkerId('0'),
-            infoWindow: InfoWindow(
-              title: "동네",
-              snippet: "흥미로운 곳",
-            ),
+          markerId: MarkerId('0'),
+          infoWindow: InfoWindow(
+            title: "동네",
+            snippet: "흥미로운 곳",
+          ),
         ),
       );
     });
@@ -267,30 +264,24 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
   }
 
   void _moveCamera() async {
-    try{
+    try {
       GoogleMapController controller = await _mapController.future;
       controller.animateCamera(
-        CameraUpdate.newLatLng(
-            LatLng(
-                placeDetail.lat,
-                placeDetail.lng)),
+        CameraUpdate.newLatLng(LatLng(placeDetail.lat, placeDetail.lng)),
       );
-    } catch(e) {
+    } catch (e) {
       print("error?? -$e");
-
     }
 
     print("noo - ${placeDetail.lat}");
     print("noo - ${placeDetail.lng}");
 
     setState(() {
-      _markers.add(
-          Marker(
+      _markers.add(Marker(
         markerId: MarkerId(placeDetail.name),
         position: LatLng(placeDetail?.lat, placeDetail.lng),
         infoWindow: InfoWindow(
-            title: placeDetail.name,
-            snippet: placeDetail.formattedAddress),
+            title: placeDetail.name, snippet: placeDetail.formattedAddress),
       ));
     });
   }
@@ -313,10 +304,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             backgroundColor: Colors.white,
             elevation: 0.0,
             leading: IconButton(
-              icon: Icon(
-                  Icons.arrow_back,
-                  color: kcolorgrey
-              ),
+              icon: Icon(Icons.arrow_back, color: kcolorgrey),
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
@@ -345,16 +333,11 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             ]),
       ),
       drawer: ReviewDrawer(w: w),
-      body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(
           children: [
             Padding(
-              padding: const EdgeInsets.only(
-                  top: 30,
-                  left: 15
-              ),
+              padding: const EdgeInsets.only(top: 30, left: 15),
               child: Container(
                 width: w,
                 height: 40,
@@ -366,16 +349,13 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                           color: Colors.grey.withOpacity(0.2),
                           spreadRadius: 3,
                           blurRadius: 3,
-                          offset: Offset(0, 1)
-                      ),
+                          offset: Offset(0, 1)),
                     ]),
-                child:placeInputFiled(),
+                child: placeInputFiled(),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(
-                  top: 30,
-                  left: 15),
+              padding: const EdgeInsets.only(top: 30, left: 15),
               child: IconButton(
                   icon: Icon(
                     Icons.search,
@@ -389,8 +369,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
           child: Container(
             margin: EdgeInsets.only(top: 20),
             height: MediaQuery.of(context).size.height,
-            child: Stack(
-                children: [
+            child: Stack(children: [
               GoogleMap(
                 myLocationEnabled: true,
                 mapType: _googleMapType,
@@ -414,9 +393,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                       label: Text(
                         "근처의 가게찾기",
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold
-                        ),
+                            fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                       elevation: 3,
                       backgroundColor: pointColor,
@@ -427,32 +404,31 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
             ]),
           ),
         ),
-        SlidingUpPanel(
-          controller: panelController,
-          maxHeight: 270,
-          minHeight: 110,
-          borderRadius: BorderRadius.only(
-              topRight: Radius.circular(40)
-          ),
-          panel: Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.only(
-                      top: 21,
-                      left: 25
-                  ),
-                  child: Text(
-                    placeDetail?.name ?? "현재위치", //널 세이프티하게 처리
-                    style: GoogleFonts.nanumGothic(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold
-                    ),
-                  ),
+        placeInfomation() //메서드 추출해서빼기
+      ]),
+    );
+  }
+
+  Widget placeInfomation() {
+    return SlidingUpPanel(
+        controller: panelController,
+        maxHeight: 270,
+        minHeight: 110,
+        borderRadius: BorderRadius.only(topRight: Radius.circular(40)),
+        panel: Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.only(top: 21, left: 25),
+                child: Text(
+                  placeDetail?.name ?? "현재위치", //널 세이프티하게 처리
+                  style: GoogleFonts.nanumGothic(
+                      fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                Row(
-                    children: [
+              ),
+              Row(
+                children: [
                   Container(
                     padding: EdgeInsets.only(left: 25),
                     child: Text(
@@ -464,79 +440,125 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                   Container(
                     padding: EdgeInsets.only(left: 25),
                     child: IconButton(
-                        icon: Icon(Icons.expand_more),
-                        onPressed: () {}),
-                  )
-                ]
-                ),
-                SizedBox(height: 10),
-                Flexible(child: ListView.builder(
-                    itemCount: placeIdMockList.length,
-                    itemBuilder: (context,index) {
-                      final placelist = this.placeIdMockList[index];
-                      print('placeList =${placeIdMockList.length}');
-                      return ListTile(
-                        title: Text(placelist.name),
+                        icon: Icon(Icons.expand_more), onPressed: () {}),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              Flexible(
+                child: ListView.builder(
+                    itemCount: placeNearbyList.length,
+                    itemBuilder: (context, index) {
+                      PlaceNearby placeNearList = this.placeNearbyList[index];
+                      print('placeList =$placeNearList');
+                      return Container(
+                        height: 120,
+                        margin: EdgeInsets.only(top: 10, left: 5, right: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100].withAlpha(150),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(children: [
+                          if (placeNearList.icon != null)
+                            Image.network(
+                              placeNearList.icon,
+                              fit: BoxFit.fitWidth,
+                              width: 120,
+                              height: 120,
+                            ),
+                          if (placeNearList.icon == null)
+                            Container(
+                              height: 100,
+                              width: 100,
+                            ),
+                          Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.only(top: 15),
+                                  child: Text(
+                                    "${placeNearList.name}",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15),
+                                  ),
+                                ),
+                                IgnorePointer(
+                                  child: RatingBar(
+                                      initialRating: placeNearList.rating,
+                                      itemBuilder: (context, _) => Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                          ),
+                                      onRatingUpdate: (rating) {
+                                        print(rating);
+                                      }),
+                                ),
+                                Flexible(child: Container()),
+                                GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ReviewWritePageScreen(
+                                                    placeNearby: placeNearList,
+                                                  )));
+                                    },
+                                    child: Text(
+                                      "리뷰쓰기 및 보러가기",
+                                    )),
+                              ])
+                        ]),
                       );
                     }),
-                ),
-    ],
+              ),
+            ],
           ),
-        )
-        )
-          ]),
+        ));
+  }
+
+  Widget placeInputFiled() {
+    return TypeAheadField(
+      debounceDuration: Duration(milliseconds: 500),
+      textFieldConfiguration: TextFieldConfiguration(
+        controller: _searchController,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.only(left: 10),
+          border: InputBorder.none,
+          hintText: '장소를 검색하세요', //검색시에 즐찾 가게를 찾을 수 있게
+          hintStyle: GoogleFonts.nanumGothic(color: Colors.grey),
+        ),
+      ),
+      suggestionsCallback: placeSugestion,
+      itemBuilder: (context, suggestion) {
+        return ListTile(
+          title: Text(suggestion.description),
+        );
+      },
+      onSuggestionSelected: (suggestion) async {
+        try {
+          placeDetail =
+              await googleMapServices.getPlaceDetail(suggestion.placeId);
+          sessionToken = null;
+          _moveCamera();
+        } catch (e) {
+          print("error111 -$e");
+        }
+      },
     );
   }
 
- Widget placeInputFiled()  {
-    return TypeAheadField(
-                debounceDuration: Duration(
-                    milliseconds: 500
-                ),
-                textFieldConfiguration: TextFieldConfiguration(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    contentPadding: EdgeInsets.only(left: 10),
-                    border: InputBorder.none,
-                    hintText: '장소를 검색하세요', //검색시에 즐찾 가게를 찾을 수 있게
-                    hintStyle: GoogleFonts.nanumGothic(color: Colors.grey),
-                  ),
-                ),
-                suggestionsCallback: placeSugestion,
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion.description),
-                  );
-                },
-
-                onSuggestionSelected: (suggestion) async {
-                  try {
-                    placeDetail = await googleMapServices.getPlaceDetail(
-                        suggestion.placeId);
-                    sessionToken = null;
-                    _moveCamera();
-                  } catch(e){
-                    print("error111 -$e");
-                  }
-
-                },
-              );
+  FutureOr<List<Place>> placeSugestion(String pattern) async {
+    if (sessionToken == null) {
+      sessionToken = uuid.v4();
+    }
+    googleMapServices = GoogleMapServices(sessionToken: sessionToken);
+    return await googleMapServices.getSuggestions(pattern);
   }
 
-              FutureOr<List<Place>> placeSugestion(String pattern) async {
-               if (sessionToken == null) {
-                 sessionToken = uuid.v4();
-               }
-               googleMapServices =
-                   GoogleMapServices(sessionToken: sessionToken);
-               return await googleMapServices.getSuggestions(pattern);
-             }
-
- Widget buildSlidingPanel({
-   @required PanelController panelController}) {
-  return GestureDetector(
-    onTap: panelController.open,
-  );
- }
+  Widget buildSlidingPanel({@required PanelController panelController}) {
+    return GestureDetector(
+      onTap: panelController.open,
+    );
+  }
 }
-

@@ -1,4 +1,5 @@
 import 'package:alleymap_app/model/user.dart';
+import 'package:alleymap_app/screen/ReviewScreen.dart';
 import 'package:alleymap_app/screen/reviewWriteScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -97,7 +98,11 @@ class ReviewDrawer extends StatelessWidget {
           ),
           ListTile(
             title: InkWell(
-              onTap: (){},
+              onTap: (){
+                Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => ReviewScreen()));
+              },
               child: Text(
                 '리뷰보기',
                 style: GoogleFonts.nanumGothic(
