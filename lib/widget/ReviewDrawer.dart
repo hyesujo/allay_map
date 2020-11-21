@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ReviewDrawer extends StatelessWidget {
-
   final double w;
 
   const ReviewDrawer({
@@ -19,24 +18,17 @@ class ReviewDrawer extends StatelessWidget {
         children: [
           SafeArea(
             child: Container(
-              padding: EdgeInsets.only(
-                  left: w / 1.5
-              ),
+              padding: EdgeInsets.only(left: w / 1.5),
               child: IconButton(
-                icon: Icon(Icons.close
-                ),
-                onPressed: ()=>
-                    Navigator.of(context).pop(),
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ),
           ),
           Row(
             children: [
               Container(
-                padding: EdgeInsets.only(
-                    top: 25,
-                    left: 20
-                ),
+                padding: EdgeInsets.only(top: 25, left: 20),
                 child: ClipOval(
                   child: Image.asset(
                     user.image,
@@ -48,25 +40,17 @@ class ReviewDrawer extends StatelessWidget {
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children:[
+                children: [
                   Container(
-                    padding: EdgeInsets.only(
-                        top: 20,
-                        left: 20
-                    ),
+                    padding: EdgeInsets.only(top: 20, left: 20),
                     child: Text(
                       user.name,
                       style: GoogleFonts.nanumGothic(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w600
-                      ),
+                          fontSize: 21, fontWeight: FontWeight.w600),
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.only(
-                        top: 5,
-                        left: 20
-                    ),
+                    padding: EdgeInsets.only(top: 5, left: 20),
                     child: Text(
                       user.content,
                       style: GoogleFonts.nanumGothic(
@@ -82,40 +66,20 @@ class ReviewDrawer extends StatelessWidget {
             padding: EdgeInsets.only(top: 24),
             child: ListTile(
               title: InkWell(
-                onTap: (){
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => ReviewWritePageScreen()));
+                onTap: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => ReviewScreen()));
                 },
                 child: Text(
-                  '리뷰쓰기',
+                  '리뷰보기',
                   style: GoogleFonts.nanumGothic(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500
-                  ),
+                      fontSize: 18, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
           ),
-          ListTile(
-            title: InkWell(
-              onTap: (){
-                Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (context) => ReviewScreen()));
-              },
-              child: Text(
-                '리뷰보기',
-                style: GoogleFonts.nanumGothic(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500
-                ),
-              ),
-            ),
-          ),
-
         ],
       ),
     );
   }
 }
-

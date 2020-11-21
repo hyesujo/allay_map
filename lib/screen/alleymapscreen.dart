@@ -166,8 +166,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
           for (int i = 0; i < placeNear.length; i++) {
             PlaceNearby placeNearby = placeNear[i];
             placeIdList.add(placeNearby.placeId);
-
-            // print('add PlaceId -${placeNearby.placeId}');
+            print("placccee id_${placeNearby.placeId}");
 
             _markers.add(
               Marker(
@@ -243,18 +242,6 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController.complete(controller);
-
-    setState(() {
-      _markers.add(
-        Marker(
-          markerId: MarkerId('0'),
-          infoWindow: InfoWindow(
-            title: "동네",
-            snippet: "흥미로운 곳",
-          ),
-        ),
-      );
-    });
   }
 
   @override
@@ -484,7 +471,7 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                                   ),
                                 ),
                                 IgnorePointer(
-                                  child: RatingBar(
+                                  child: RatingBar.builder(
                                       initialRating: placeNearList.rating,
                                       itemBuilder: (context, _) => Icon(
                                             Icons.star,

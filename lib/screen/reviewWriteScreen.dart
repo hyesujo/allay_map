@@ -15,7 +15,7 @@ import 'package:flushbar/flushbar.dart';
 import 'package:uuid/uuid.dart';
 
 class ReviewWritePageScreen extends StatefulWidget {
-  PlaceNearby placeNearby;
+  final PlaceNearby placeNearby;
 
   ReviewWritePageScreen({this.placeNearby});
 
@@ -156,7 +156,7 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
             ),
             Container(
               padding: EdgeInsets.only(left: 25, top: 15),
-              child: RatingBar(
+              child: RatingBar.builder(
                   initialRating: 3.0,
                   minRating: 0.5,
                   direction: Axis.horizontal,
@@ -211,7 +211,7 @@ class _ReviewWritePageScreenState extends State<ReviewWritePageScreen> {
                 "리뷰가 삭제될 수 있습니다.",
                 style: TextStyle(
                     color: greyColor,
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w400),
               ),
             ),

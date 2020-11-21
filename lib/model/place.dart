@@ -11,7 +11,7 @@ class Place {
 
   Place.fromJson(Map<String, dynamic> json)
       : this.description = json['description'],
-        this.placeId = json['place_id'];
+        this.placeId = json['placeId'];
 
   // factory Place.fromJson2(Map<String, dynamic> json) {
   //   return Place(
@@ -97,7 +97,7 @@ class PlaceNearby {
       this.icon});
 
   factory PlaceNearby.fromJson(Map<String, dynamic> json) => PlaceNearby(
-      placeId: json['placeId'],
+      placeId: json['place_id'],
       lat: json['geometry']['location']['lat'],
       lng: json['geometry']['location']['lng'],
       name: json['name'],
@@ -106,7 +106,7 @@ class PlaceNearby {
   factory PlaceNearby.fromFirebase(Map<String, dynamic> json) {
     print("place data - $json");
     return PlaceNearby(
-        placeId: json['placeId'],
+        placeId: json['place_id'],
         lat: json['lat'],
         lng: json['lng'],
         name: json['name'],
