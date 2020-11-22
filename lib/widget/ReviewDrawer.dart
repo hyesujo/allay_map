@@ -1,5 +1,5 @@
 import 'package:alleymap_app/model/user.dart';
-import 'package:alleymap_app/screen/ReviewScreen.dart';
+import 'package:alleymap_app/screen/reviewScreen.dart';
 import 'package:alleymap_app/screen/reviewWriteScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

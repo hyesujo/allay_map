@@ -1,14 +1,25 @@
 import 'package:alleymap_app/config.dart';
+import 'package:alleymap_app/model/place.dart';
 import 'package:alleymap_app/model/review.dart';
+import 'package:alleymap_app/service/reviewService.dart';
 import 'package:flutter/material.dart';
 
 class ReviewScreen extends StatefulWidget {
+  PlaceNearby placeNearby;
+
+  ReviewScreen({this.placeNearby});
+
   @override
   _ReviewScreenState createState() => _ReviewScreenState();
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
+  ReviewService reviewService = ReviewService();
+
+  List<Review> reviewList = [];
+
   Review review = Review();
+
   final List<String> infophoto = [
     'assets/images/plop1.jpg',
     "assets/images/plop2.jpg",
@@ -16,6 +27,24 @@ class _ReviewScreenState extends State<ReviewScreen> {
   ];
 
   int currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    readData();
+  }
+
+  void readData() async {
+    List<Review> reviewList =
+        await reviewService.getReview(widget.placeNearby.placeId);
+    setState(() {
+      if (reviewList.length > 0) {
+        print("dddd-${reviewList[0]}");
+        this.review = reviewList[0];
+        this.reviewList = reviewList;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +148,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                       children: <TextSpan>[
                         TextSpan(
-                          text: "62",
+                          text: "${reviewList.length}",
                           style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
@@ -133,24 +162,95 @@ class _ReviewScreenState extends State<ReviewScreen> {
               height: 20,
             ),
             Center(
-              child: Container(
-                padding: EdgeInsets.only(left: 25),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      color: pointColor,
-                      size: 40,
-                    ),
-                    Text("${review.rating = 4}"), //placeId랑 연동을 해서 가져와야 하는지
-                  ],
+              child: Column(children: [
+                Container(
+                  padding: EdgeInsets.only(left: 25),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: pointColor,
+                        size: 40,
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(left: 5),
+                        child: Text(
+                          "${review.rating}/", //placeId랑 연동을 해서 가져오는 방법
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(left: 5),
+                        child: Text(
+                          "5",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600]),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 25,
+                      ),
+                      Container(
+                        height: size.height * 0.12,
+                        width: 1.5,
+                        color: Colors.grey[400],
+                      ),
+                      Column(
+                        children: [
+                          Row(children: [
+                            Container(
+                              padding: EdgeInsets.only(top: 20, left: 20),
+                              child: Text(
+                                '5점',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(top: 20, left: 10),
+                              child: Container(
+                                width: size.width * 0.13,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: pointColor,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(5),
+                                    bottomLeft: Radius.circular(5),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(top: 20),
+                              child: Container(
+                                width: size.width * 0.07,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[400],
+                                  borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(5),
+                                    bottomRight: Radius.circular(5),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                                padding: EdgeInsets.only(top: 20, left: 13),
+                                child: Text("42")), //전체를 위젯이나 메소드로 뺄수 있는지
+                          ]),
+                        ],
+                      ),
+                    ],
+                  ),
+                  width: size.width * 0.85,
+                  height: size.height * 0.18,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(20)),
                 ),
-                width: size.width * 0.85,
-                height: size.height * 0.18,
-                decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(20)),
-              ),
+              ]),
             ),
           ],
         ),

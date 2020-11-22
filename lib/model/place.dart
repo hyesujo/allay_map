@@ -1,3 +1,5 @@
+import '../constant.dart';
+
 class Place {
   String description;
   final String placeId;
@@ -86,12 +88,14 @@ class PlaceNearby {
   String icon;
   final String vicinity;
   double rating = 0.0;
+  String photoReference;
 
   PlaceNearby(
       {this.placeId,
       this.lat,
       this.lng,
       this.name,
+      this.photoReference,
       this.vicinity,
       this.rating,
       this.icon});
@@ -105,23 +109,24 @@ class PlaceNearby {
 
   factory PlaceNearby.fromFirebase(Map<String, dynamic> json) {
     print("place data - $json");
+
     return PlaceNearby(
-        placeId: json['place_id'],
+        placeId: json['placeId'],
         lat: json['lat'],
         lng: json['lng'],
         name: json['name'],
+        photoReference: getPhotoUrl(json['photoReference']) ?? null,
         vicinity: json['vicinity'],
         rating: json['rating'],
         icon: json['icon']);
   }
 
-  Map<String, dynamic> tomap() {
-    return {
-      'placeId': this.placeId,
-      'lat': this.lat,
-      'lng': this.lng,
-      'name': this.name,
-      'vicinity': this.vicinity,
-    };
+  static String getPhotoUrl(String photoRef) {
+    if (photoRef == null) {
+      return null;
+    }
+    String url =
+        "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoRef&key=$API_KEY";
+    return url;
   }
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:alleymap_app/config.dart';
 import 'package:alleymap_app/constant.dart';
 import 'package:alleymap_app/model/place.dart';
+import 'package:alleymap_app/screen/reviewScreen.dart';
 import 'package:alleymap_app/screen/reviewWriteScreen.dart';
 import 'package:alleymap_app/service/Place_Service.dart';
 import 'package:alleymap_app/service/googlemapService.dart';
@@ -65,7 +66,6 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
 
     placeDetail =
         PlaceDetail(lng: pos.longitude, lat: pos.latitude); //placeDetail 인스턴스화함
-    print('google mapff - ${currentPos.latitude}');
 
     // _placeService.listPlace().then((value) => print(value));
     _placeService
@@ -179,6 +179,8 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                     title: placeNearby.name,
                     snippet: placeNearby.vicinity,
                     onTap: () {
+                      //1.지우고 새로불러오기
+                      //2 또는 기존 데이터를 가지고 필터링
                       //  print("${placeNearby.name}");
                       // googleMapServices.getPlaceDetailList(placeNearby.placeId);
                     }),
@@ -446,17 +448,19 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Row(children: [
-                          if (placeNearList.icon != null)
+                          if (placeNearList.photoReference != null)
+                            Image.network(
+                              placeNearList.photoReference,
+                              fit: BoxFit.fitWidth,
+                              width: 120,
+                              height: 120,
+                            ),
+                          if (placeNearList.photoReference == null)
                             Image.network(
                               placeNearList.icon,
                               fit: BoxFit.fitWidth,
                               width: 120,
                               height: 120,
-                            ),
-                          if (placeNearList.icon == null)
-                            Container(
-                              height: 100,
-                              width: 100,
                             ),
                           Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -481,19 +485,56 @@ class _AlleyMapScreenState extends State<AlleyMapScreen> {
                                         print(rating);
                                       }),
                                 ),
-                                Flexible(child: Container()),
-                                GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                          MaterialPageRoute(
+                                Flexible(
+                                  child: Container(),
+                                ),
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        print(
+                                            "place Idddd - ${placeNearList.placeId}");
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ReviewWritePageScreen(
+                                                      placeNearby:
+                                                          placeNearList,
+                                                    )));
+                                      },
+                                      child: Text(
+                                        "리뷰쓰기",
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.only(left: 15),
+                                      child: Container(
+                                        height: 15,
+                                        width: 1,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    if (placeNearList.placeId != null)
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
                                               builder: (context) =>
-                                                  ReviewWritePageScreen(
-                                                    placeNearby: placeNearList,
-                                                  )));
-                                    },
-                                    child: Text(
-                                      "리뷰쓰기 및 보러가기",
-                                    )),
+                                                  ReviewScreen(
+                                                placeNearby: placeNearList,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.only(left: 10),
+                                          child: Text(
+                                            "리뷰보러가기",
+                                          ),
+                                        ),
+                                      )
+                                  ],
+                                ),
                               ])
                         ]),
                       );

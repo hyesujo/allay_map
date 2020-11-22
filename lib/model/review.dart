@@ -2,7 +2,7 @@ class Review {
   String placeId;
   String content;
   String photoUrl;
-  double rating;
+  double rating = 4.0;
 
   Review({this.placeId, this.rating, this.photoUrl, this.content});
 

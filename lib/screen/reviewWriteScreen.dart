@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:alleymap_app/config.dart';
 import 'package:alleymap_app/model/place.dart';
 import 'package:alleymap_app/model/review.dart';
-import 'package:alleymap_app/screen/ReviewScreen.dart';
+import 'package:alleymap_app/screen/reviewScreen.dart';
 import 'package:alleymap_app/screen/alleyExplorationScreen.dart';
 import 'package:alleymap_app/service/dateBase.dart';
 import 'package:alleymap_app/widget/CustomAppbar.dart';
